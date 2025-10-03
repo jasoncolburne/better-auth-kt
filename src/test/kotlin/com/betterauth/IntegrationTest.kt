@@ -8,10 +8,10 @@ import com.betterauth.implementation.NoncerImpl
 import com.betterauth.implementation.Rfc3339Nano
 import com.betterauth.implementation.Secp256r1
 import com.betterauth.implementation.Secp256r1Verifier
+import com.betterauth.interfaces.AccountPaths
 import com.betterauth.interfaces.AuthenticatePaths
 import com.betterauth.interfaces.AuthenticationPaths
 import com.betterauth.interfaces.Network
-import com.betterauth.interfaces.RegisterPaths
 import com.betterauth.interfaces.RotatePaths
 import com.betterauth.interfaces.VerificationKey
 import com.betterauth.interfaces.Verifier
@@ -46,11 +46,9 @@ class Secp256r1VerificationKey(
 
 val authenticationPaths =
     AuthenticationPaths(
-        register =
-            RegisterPaths(
-                create = "/register/create",
-                link = "/register/link",
-                recover = "/register/recover",
+        account =
+            AccountPaths(
+                create = "/account/create",
             ),
         authenticate =
             AuthenticatePaths(
@@ -61,6 +59,9 @@ val authenticationPaths =
             RotatePaths(
                 authentication = "/rotate/authentication",
                 access = "/rotate/access",
+                link = "/rotate/link",
+                unlink = "/rotate/unlink",
+                recover = "/rotate/recover",
             ),
     )
 
@@ -308,8 +309,13 @@ class IntegrationTest {
 
             val recoveryHash = hasher.sum(recoverySigner.public())
             betterAuthClient.createAccount(recoveryHash)
+
+            val nextRecoverySigner = Secp256r1()
+            nextRecoverySigner.generate()
+            val nextRecoveryHash = hasher.sum(nextRecoverySigner.public())
+
             val identity = betterAuthClient.identity()
-            recoveredBetterAuthClient.recoverAccount(identity, recoverySigner)
+            recoveredBetterAuthClient.recoverAccount(identity, recoverySigner, nextRecoveryHash)
             executeFlow(recoveredBetterAuthClient, eccVerifier, responseVerificationKey)
         }
 
@@ -419,6 +425,9 @@ class IntegrationTest {
             // submit an endorsed link container with existing device
             betterAuthClient.linkDevice(linkContainer)
             executeFlow(linkedBetterAuthClient, eccVerifier, responseVerificationKey)
+
+            // unlink the original device
+            linkedBetterAuthClient.unlinkDevice(betterAuthClient.device())
         }
 
     @Test

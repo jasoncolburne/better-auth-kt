@@ -124,7 +124,7 @@ class BetterAuthClient(
 
         request.sign(store.key.authentication.signer())
         val message = request.serialize()
-        val reply = io.network.sendRequest(paths.register.create, message)
+        val reply = io.network.sendRequest(paths.account.create, message)
 
         val response = CreationResponse.parse(reply)
 
@@ -173,6 +173,8 @@ class BetterAuthClient(
     // like 244x244px (61*4x61*4)
     suspend fun linkDevice(linkContainer: String) {
         val container = LinkContainer.parse(linkContainer)
+
+        val (publicKey, rotationHash) = store.key.authentication.rotate()
         val nonce = crypto.noncer.generate128()
 
         val request =
@@ -182,6 +184,8 @@ class BetterAuthClient(
                         LinkDeviceRequestData.AuthenticationData(
                             device = store.identifier.device.get(),
                             identity = store.identifier.identity.get(),
+                            publicKey = publicKey,
+                            rotationHash = rotationHash,
                         ),
                     link = com.betterauth.messages.LinkContainerData(container.linkContainerPayload, container.signature),
                 ),
@@ -190,7 +194,7 @@ class BetterAuthClient(
 
         request.sign(store.key.authentication.signer())
         val message = request.serialize()
-        val reply = io.network.sendRequest(paths.register.link, message)
+        val reply = io.network.sendRequest(paths.rotate.link, message)
 
         val response = LinkDeviceResponse.parse(reply)
 
@@ -198,6 +202,54 @@ class BetterAuthClient(
         val responsePayload =
             response.payload as
                 com.betterauth.messages.ServerPayload<com.betterauth.messages.LinkDeviceResponseData>
+        verifyResponse(response, responsePayload.access.responseKeyHash)
+
+        if (responsePayload.access.nonce != nonce) {
+            throw IllegalStateException("incorrect nonce")
+        }
+    }
+
+    suspend fun unlinkDevice(device: String) {
+        val (publicKey, rotationHash) = store.key.authentication.rotate()
+        val nonce = crypto.noncer.generate128()
+
+        val currentDevice = store.identifier.device.get()
+        val hash =
+            if (device == currentDevice) {
+                // prevent rotation if disabling this device
+                crypto.hasher.sum(rotationHash)
+            } else {
+                rotationHash
+            }
+
+        val request =
+            com.betterauth.messages.UnlinkDeviceRequest(
+                com.betterauth.messages.UnlinkDeviceRequestData(
+                    authentication =
+                        com.betterauth.messages.UnlinkDeviceRequestData.AuthenticationData(
+                            device = currentDevice,
+                            identity = store.identifier.identity.get(),
+                            publicKey = publicKey,
+                            rotationHash = hash,
+                        ),
+                    link =
+                        com.betterauth.messages.UnlinkDeviceRequestData.LinkData(
+                            device = device,
+                        ),
+                ),
+                nonce,
+            )
+
+        request.sign(store.key.authentication.signer())
+        val message = request.serialize()
+        val reply = io.network.sendRequest(paths.rotate.unlink, message)
+
+        val response = com.betterauth.messages.UnlinkDeviceResponse.parse(reply)
+
+        @Suppress("UNCHECKED_CAST")
+        val responsePayload =
+            response.payload as
+                com.betterauth.messages.ServerPayload<com.betterauth.messages.UnlinkDeviceResponseData>
         verifyResponse(response, responsePayload.access.responseKeyHash)
 
         if (responsePayload.access.nonce != nonce) {
@@ -348,6 +400,7 @@ class BetterAuthClient(
     suspend fun recoverAccount(
         identity: String,
         recoveryKey: SigningKey,
+        recoveryHash: String,
     ) {
         val (_, current, rotationHash) = store.key.authentication.initialize()
         val device = crypto.hasher.sum(current)
@@ -360,6 +413,7 @@ class BetterAuthClient(
                         device = device,
                         identity = identity,
                         publicKey = current,
+                        recoveryHash = recoveryHash,
                         recoveryKey = recoveryKey.public(),
                         rotationHash = rotationHash,
                     ),
@@ -369,7 +423,7 @@ class BetterAuthClient(
 
         request.sign(recoveryKey)
         val message = request.serialize()
-        val reply = io.network.sendRequest(paths.register.recover, message)
+        val reply = io.network.sendRequest(paths.rotate.recover, message)
 
         val response = RecoverAccountResponse.parse(reply)
 

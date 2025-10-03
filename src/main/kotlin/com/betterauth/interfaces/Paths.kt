@@ -1,15 +1,13 @@
 package com.betterauth.interfaces
 
 data class AuthenticationPaths(
-    val register: RegisterPaths,
+    val account: AccountPaths,
     val authenticate: AuthenticatePaths,
     val rotate: RotatePaths,
 )
 
-data class RegisterPaths(
+data class AccountPaths(
     val create: String,
-    val link: String,
-    val recover: String,
 )
 
 data class AuthenticatePaths(
@@ -20,4 +18,7 @@ data class AuthenticatePaths(
 data class RotatePaths(
     val authentication: String,
     val access: String,
+    val link: String,
+    val unlink: String,
+    val recover: String,
 )

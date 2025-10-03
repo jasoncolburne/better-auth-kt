@@ -54,6 +54,8 @@ data class LinkDeviceRequestData(
     data class AuthenticationData(
         val device: String,
         val identity: String,
+        val publicKey: String,
+        val rotationHash: String,
     )
 }
 
@@ -87,5 +89,57 @@ class LinkDeviceResponse(
             parse<LinkDeviceResponseData, LinkDeviceResponse>(message) { response, responseKeyHash, nonce ->
                 LinkDeviceResponse(response, responseKeyHash, nonce)
             } as LinkDeviceResponse
+    }
+}
+
+@Serializable
+data class UnlinkDeviceRequestData(
+    val authentication: AuthenticationData,
+    val link: LinkData,
+) {
+    @Serializable
+    data class AuthenticationData(
+        val device: String,
+        val identity: String,
+        val publicKey: String,
+        val rotationHash: String,
+    )
+
+    @Serializable
+    data class LinkData(
+        val device: String,
+    )
+}
+
+class UnlinkDeviceRequest(
+    request: UnlinkDeviceRequestData,
+    nonce: String,
+) : ClientRequest<UnlinkDeviceRequestData>(request, nonce, ClientPayload.serializer(UnlinkDeviceRequestData.serializer())) {
+    companion object {
+        fun parse(message: String): UnlinkDeviceRequest =
+            parse<UnlinkDeviceRequestData, UnlinkDeviceRequest>(message) { request, nonce ->
+                UnlinkDeviceRequest(request, nonce)
+            } as UnlinkDeviceRequest
+    }
+}
+
+@Serializable
+class UnlinkDeviceResponseData
+
+class UnlinkDeviceResponse(
+    response: UnlinkDeviceResponseData,
+    responseKeyHash: String,
+    nonce: String,
+) : ServerResponse<UnlinkDeviceResponseData>(
+        response,
+        responseKeyHash,
+        nonce,
+        ServerPayload.serializer(UnlinkDeviceResponseData.serializer()),
+    ) {
+    companion object {
+        fun parse(message: String): UnlinkDeviceResponse =
+            parse<UnlinkDeviceResponseData, UnlinkDeviceResponse>(message) { response, responseKeyHash, nonce ->
+                UnlinkDeviceResponse(response, responseKeyHash, nonce)
+            } as UnlinkDeviceResponse
     }
 }
