@@ -210,8 +210,9 @@ class BetterAuthClient(
     }
 
     suspend fun unlinkDevice(device: String) {
-        val (publicKey, rotationHash) = store.key.authentication.rotate()
         val nonce = crypto.noncer.generate128()
+
+        val (publicKey, rotationHash) = store.key.authentication.rotate()
 
         val currentDevice = store.identifier.device.get()
         val hash =
