@@ -244,7 +244,9 @@ class BetterAuthClient(
         val message = request.serialize()
         val reply = io.network.sendRequest(paths.rotate.unlink, message)
 
-        val response = com.betterauth.messages.UnlinkDeviceResponse.parse(reply)
+        val response =
+            com.betterauth.messages.UnlinkDeviceResponse
+                .parse(reply)
 
         @Suppress("UNCHECKED_CAST")
         val responsePayload =
