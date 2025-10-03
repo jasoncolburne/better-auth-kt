@@ -11,6 +11,7 @@ data class RecoverAccountRequestData(
         val device: String,
         val identity: String,
         val publicKey: String,
+        val recoveryHash: String,
         val recoveryKey: String,
         val rotationHash: String,
     )
