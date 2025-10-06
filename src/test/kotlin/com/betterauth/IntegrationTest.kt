@@ -14,6 +14,7 @@ import com.betterauth.interfaces.AuthenticationPaths
 import com.betterauth.interfaces.Network
 import com.betterauth.interfaces.RotatePaths
 import com.betterauth.interfaces.VerificationKey
+import com.betterauth.interfaces.VerificationKeyStore
 import com.betterauth.interfaces.Verifier
 import com.betterauth.messages.ServerPayload
 import com.betterauth.messages.ServerResponse
@@ -42,6 +43,12 @@ class Secp256r1VerificationKey(
     ) {
         secpVerifier.verify(message, signature, publicKey)
     }
+}
+
+class SimpleVerificationKeyStore(
+    private val verificationKey: VerificationKey,
+) : VerificationKeyStore {
+    override suspend fun get(identity: String): VerificationKey = verificationKey
 }
 
 val authenticationPaths =
@@ -110,13 +117,13 @@ data class FakeResponseData(
 
 class FakeResponse(
     response: FakeResponseData,
-    responseKeyHash: String,
+    serverIdentity: String,
     nonce: String,
-) : ServerResponse<FakeResponseData>(response, responseKeyHash, nonce, ServerPayload.serializer(FakeResponseData.serializer())) {
+) : ServerResponse<FakeResponseData>(response, serverIdentity, nonce, ServerPayload.serializer(FakeResponseData.serializer())) {
     companion object {
         fun parse(message: String): FakeResponse =
-            parse<FakeResponseData, FakeResponse>(message) { response, responseKeyHash, nonce ->
-                FakeResponse(response, responseKeyHash, nonce)
+            parse<FakeResponseData, FakeResponse>(message) { response, serverIdentity, nonce ->
+                FakeResponse(response, serverIdentity, nonce)
             } as FakeResponse
     }
 }
@@ -169,6 +176,7 @@ class IntegrationTest {
 
             val responsePublicKey = network.sendRequest("/key/response", "")
             val responseVerificationKey = Secp256r1VerificationKey(responsePublicKey)
+            val responseVerificationKeyStore = SimpleVerificationKeyStore(responseVerificationKey)
 
             val betterAuthClient =
                 BetterAuthClient(
@@ -178,7 +186,7 @@ class IntegrationTest {
                             noncer = noncer,
                             publicKey =
                                 BetterAuthClient.PublicKeyConfig(
-                                    response = responseVerificationKey,
+                                    response = responseVerificationKeyStore,
                                 ),
                         ),
                     encoding =
@@ -228,6 +236,7 @@ class IntegrationTest {
 
             val responsePublicKey = network.sendRequest("/key/response", "")
             val responseVerificationKey = Secp256r1VerificationKey(responsePublicKey)
+            val responseVerificationKeyStore = SimpleVerificationKeyStore(responseVerificationKey)
 
             val betterAuthClient =
                 BetterAuthClient(
@@ -237,7 +246,7 @@ class IntegrationTest {
                             noncer = noncer,
                             publicKey =
                                 BetterAuthClient.PublicKeyConfig(
-                                    response = responseVerificationKey,
+                                    response = responseVerificationKeyStore,
                                 ),
                         ),
                     encoding =
@@ -276,7 +285,7 @@ class IntegrationTest {
                             noncer = NoncerImpl(),
                             publicKey =
                                 BetterAuthClient.PublicKeyConfig(
-                                    response = responseVerificationKey,
+                                    response = responseVerificationKeyStore,
                                 ),
                         ),
                     encoding =
@@ -333,6 +342,7 @@ class IntegrationTest {
 
             val responsePublicKey = network.sendRequest("/key/response", "")
             val responseVerificationKey = Secp256r1VerificationKey(responsePublicKey)
+            val responseVerificationKeyStore = SimpleVerificationKeyStore(responseVerificationKey)
 
             val betterAuthClient =
                 BetterAuthClient(
@@ -342,7 +352,7 @@ class IntegrationTest {
                             noncer = noncer,
                             publicKey =
                                 BetterAuthClient.PublicKeyConfig(
-                                    response = responseVerificationKey,
+                                    response = responseVerificationKeyStore,
                                 ),
                         ),
                     encoding =
@@ -381,7 +391,7 @@ class IntegrationTest {
                             noncer = NoncerImpl(),
                             publicKey =
                                 BetterAuthClient.PublicKeyConfig(
-                                    response = responseVerificationKey,
+                                    response = responseVerificationKeyStore,
                                 ),
                         ),
                     encoding =
@@ -443,6 +453,7 @@ class IntegrationTest {
 
             val responsePublicKey = network.sendRequest("/key/response", "")
             val responseVerificationKey = Secp256r1VerificationKey(responsePublicKey)
+            val responseVerificationKeyStore = SimpleVerificationKeyStore(responseVerificationKey)
 
             val accessTokenStore = ClientValueStoreImpl()
             val betterAuthClient =
@@ -453,7 +464,7 @@ class IntegrationTest {
                             noncer = noncer,
                             publicKey =
                                 BetterAuthClient.PublicKeyConfig(
-                                    response = responseVerificationKey,
+                                    response = responseVerificationKeyStore,
                                 ),
                         ),
                     encoding =

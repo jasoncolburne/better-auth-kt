@@ -34,18 +34,18 @@ class RecoverAccountResponseData
 
 class RecoverAccountResponse(
     response: RecoverAccountResponseData,
-    responseKeyHash: String,
+    serverIdentity: String,
     nonce: String,
 ) : ServerResponse<RecoverAccountResponseData>(
         response,
-        responseKeyHash,
+        serverIdentity,
         nonce,
         ServerPayload.serializer(RecoverAccountResponseData.serializer()),
     ) {
     companion object {
         fun parse(message: String): RecoverAccountResponse =
-            parse<RecoverAccountResponseData, RecoverAccountResponse>(message) { response, responseKeyHash, nonce ->
-                RecoverAccountResponse(response, responseKeyHash, nonce)
+            parse<RecoverAccountResponseData, RecoverAccountResponse>(message) { response, serverIdentity, nonce ->
+                RecoverAccountResponse(response, serverIdentity, nonce)
             } as RecoverAccountResponse
     }
 }

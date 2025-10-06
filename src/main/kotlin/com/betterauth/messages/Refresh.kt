@@ -38,18 +38,18 @@ data class RefreshAccessTokenResponseData(
 
 class RefreshAccessTokenResponse(
     response: RefreshAccessTokenResponseData,
-    responseKeyHash: String,
+    serverIdentity: String,
     nonce: String,
 ) : ServerResponse<RefreshAccessTokenResponseData>(
         response,
-        responseKeyHash,
+        serverIdentity,
         nonce,
         ServerPayload.serializer(RefreshAccessTokenResponseData.serializer()),
     ) {
     companion object {
         fun parse(message: String): RefreshAccessTokenResponse =
-            parse<RefreshAccessTokenResponseData, RefreshAccessTokenResponse>(message) { response, responseKeyHash, nonce ->
-                RefreshAccessTokenResponse(response, responseKeyHash, nonce)
+            parse<RefreshAccessTokenResponseData, RefreshAccessTokenResponse>(message) { response, serverIdentity, nonce ->
+                RefreshAccessTokenResponse(response, serverIdentity, nonce)
             } as RefreshAccessTokenResponse
     }
 }

@@ -36,18 +36,18 @@ class RotateAuthenticationKeyResponseData
 
 class RotateAuthenticationKeyResponse(
     response: RotateAuthenticationKeyResponseData,
-    responseKeyHash: String,
+    serverIdentity: String,
     nonce: String,
 ) : ServerResponse<RotateAuthenticationKeyResponseData>(
         response,
-        responseKeyHash,
+        serverIdentity,
         nonce,
         ServerPayload.serializer(RotateAuthenticationKeyResponseData.serializer()),
     ) {
     companion object {
         fun parse(message: String): RotateAuthenticationKeyResponse =
-            parse<RotateAuthenticationKeyResponseData, RotateAuthenticationKeyResponse>(message) { response, responseKeyHash, nonce ->
-                RotateAuthenticationKeyResponse(response, responseKeyHash, nonce)
+            parse<RotateAuthenticationKeyResponseData, RotateAuthenticationKeyResponse>(message) { response, serverIdentity, nonce ->
+                RotateAuthenticationKeyResponse(response, serverIdentity, nonce)
             } as RotateAuthenticationKeyResponse
     }
 }
