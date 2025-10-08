@@ -189,7 +189,7 @@ class BetterAuthClient(
 
         request.sign(store.key.authentication.signer())
         val message = request.serialize()
-        val reply = io.network.sendRequest(paths.rotate.link, message)
+        val reply = io.network.sendRequest(paths.device.link, message)
 
         val response = LinkDeviceResponse.parse(reply)
 
@@ -238,7 +238,7 @@ class BetterAuthClient(
 
         request.sign(store.key.authentication.signer())
         val message = request.serialize()
-        val reply = io.network.sendRequest(paths.rotate.unlink, message)
+        val reply = io.network.sendRequest(paths.device.unlink, message)
 
         val response =
             com.betterauth.messages.UnlinkDeviceResponse
@@ -274,7 +274,7 @@ class BetterAuthClient(
 
         request.sign(store.key.authentication.signer())
         val message = request.serialize()
-        val reply = io.network.sendRequest(paths.rotate.authentication, message)
+        val reply = io.network.sendRequest(paths.device.rotate, message)
 
         val response = RotateAuthenticationKeyResponse.parse(reply)
 
@@ -307,7 +307,7 @@ class BetterAuthClient(
             )
 
         val startMessage = startRequest.serialize()
-        val startReply = io.network.sendRequest(paths.authenticate.start, startMessage)
+        val startReply = io.network.sendRequest(paths.session.request, startMessage)
 
         val startResponse = StartAuthenticationResponse.parse(startReply)
 
@@ -343,7 +343,7 @@ class BetterAuthClient(
 
         finishRequest.sign(store.key.authentication.signer())
         val finishMessage = finishRequest.serialize()
-        val finishReply = io.network.sendRequest(paths.authenticate.finish, finishMessage)
+        val finishReply = io.network.sendRequest(paths.session.connect, finishMessage)
 
         val finishResponse = FinishAuthenticationResponse.parse(finishReply)
 
@@ -378,7 +378,7 @@ class BetterAuthClient(
 
         request.sign(store.key.access.signer())
         val message = request.serialize()
-        val reply = io.network.sendRequest(paths.rotate.access, message)
+        val reply = io.network.sendRequest(paths.session.refresh, message)
 
         val response = RefreshAccessTokenResponse.parse(reply)
 
@@ -421,7 +421,7 @@ class BetterAuthClient(
 
         request.sign(recoveryKey)
         val message = request.serialize()
-        val reply = io.network.sendRequest(paths.rotate.recover, message)
+        val reply = io.network.sendRequest(paths.account.recover, message)
 
         val response = RecoverAccountResponse.parse(reply)
 

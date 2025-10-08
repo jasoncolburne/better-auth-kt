@@ -9,10 +9,10 @@ import com.betterauth.implementation.Rfc3339Nano
 import com.betterauth.implementation.Secp256r1
 import com.betterauth.implementation.Secp256r1Verifier
 import com.betterauth.interfaces.AccountPaths
-import com.betterauth.interfaces.AuthenticatePaths
 import com.betterauth.interfaces.AuthenticationPaths
+import com.betterauth.interfaces.DevicePaths
 import com.betterauth.interfaces.Network
-import com.betterauth.interfaces.RotatePaths
+import com.betterauth.interfaces.SessionPaths
 import com.betterauth.interfaces.VerificationKey
 import com.betterauth.interfaces.VerificationKeyStore
 import com.betterauth.interfaces.Verifier
@@ -56,19 +56,19 @@ val authenticationPaths =
         account =
             AccountPaths(
                 create = "/account/create",
+                recover = "/account/recover",
             ),
-        authenticate =
-            AuthenticatePaths(
-                start = "/authenticate/start",
-                finish = "/authenticate/finish",
+        session =
+            SessionPaths(
+                request = "/session/request",
+                connect = "/session/connect",
+                refresh = "/session/refresh",
             ),
-        rotate =
-            RotatePaths(
-                authentication = "/rotate/authentication",
-                access = "/rotate/access",
-                link = "/rotate/link",
-                unlink = "/rotate/unlink",
-                recover = "/rotate/recover",
+        device =
+            DevicePaths(
+                rotate = "/device/rotate",
+                link = "/device/link",
+                unlink = "/device/unlink",
             ),
     )
 
