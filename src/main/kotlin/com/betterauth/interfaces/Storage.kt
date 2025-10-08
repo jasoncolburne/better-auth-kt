@@ -93,3 +93,11 @@ interface ServerTimeLockStore {
     // - value is still alive in the store
     suspend fun reserve(value: String)
 }
+
+interface VerificationKeyStore {
+    // throw an exception if:
+    // - identity is not found
+    //
+    // returns: verification key for the given identity
+    suspend fun get(identity: String): VerificationKey
+}

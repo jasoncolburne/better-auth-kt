@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 data class ServerAccess(
     val nonce: String,
-    val responseKeyHash: String,
+    val serverIdentity: String,
 )
 
 @Serializable
@@ -23,14 +23,14 @@ data class ServerResponseData<T>(
 
 abstract class ServerResponse<T>(
     response: T,
-    responseKeyHash: String,
+    serverIdentity: String,
     nonce: String,
     private val payloadSerializer: kotlinx.serialization.KSerializer<ServerPayload<T>>,
 ) : SignableMessage() {
     private val serverPayload: ServerPayload<T>
 
     init {
-        val access = ServerAccess(nonce, responseKeyHash)
+        val access = ServerAccess(nonce, serverIdentity)
         serverPayload =
             ServerPayload(
                 access = access,
@@ -54,7 +54,7 @@ abstract class ServerResponse<T>(
             val result =
                 constructor(
                     json.payload.response,
-                    json.payload.access.responseKeyHash,
+                    json.payload.access.serverIdentity,
                     json.payload.access.nonce,
                 )
             result.signature = json.signature
@@ -69,13 +69,13 @@ class ScannableResponseData
 
 class ScannableResponse(
     response: ScannableResponseData,
-    responseKeyHash: String,
+    serverIdentity: String,
     nonce: String,
-) : ServerResponse<ScannableResponseData>(response, responseKeyHash, nonce, ServerPayload.serializer(ScannableResponseData.serializer())) {
+) : ServerResponse<ScannableResponseData>(response, serverIdentity, nonce, ServerPayload.serializer(ScannableResponseData.serializer())) {
     companion object {
         fun parse(message: String): ScannableResponse =
-            parse<ScannableResponseData, ScannableResponse>(message) { response, responseKeyHash, nonce ->
-                ScannableResponse(response, responseKeyHash, nonce)
+            parse<ScannableResponseData, ScannableResponse>(message) { response, serverIdentity, nonce ->
+                ScannableResponse(response, serverIdentity, nonce)
             } as ScannableResponse
     }
 }

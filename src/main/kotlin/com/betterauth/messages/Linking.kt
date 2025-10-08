@@ -76,18 +76,18 @@ class LinkDeviceResponseData
 
 class LinkDeviceResponse(
     response: LinkDeviceResponseData,
-    responseKeyHash: String,
+    serverIdentity: String,
     nonce: String,
 ) : ServerResponse<LinkDeviceResponseData>(
         response,
-        responseKeyHash,
+        serverIdentity,
         nonce,
         ServerPayload.serializer(LinkDeviceResponseData.serializer()),
     ) {
     companion object {
         fun parse(message: String): LinkDeviceResponse =
-            parse<LinkDeviceResponseData, LinkDeviceResponse>(message) { response, responseKeyHash, nonce ->
-                LinkDeviceResponse(response, responseKeyHash, nonce)
+            parse<LinkDeviceResponseData, LinkDeviceResponse>(message) { response, serverIdentity, nonce ->
+                LinkDeviceResponse(response, serverIdentity, nonce)
             } as LinkDeviceResponse
     }
 }
@@ -128,18 +128,18 @@ class UnlinkDeviceResponseData
 
 class UnlinkDeviceResponse(
     response: UnlinkDeviceResponseData,
-    responseKeyHash: String,
+    serverIdentity: String,
     nonce: String,
 ) : ServerResponse<UnlinkDeviceResponseData>(
         response,
-        responseKeyHash,
+        serverIdentity,
         nonce,
         ServerPayload.serializer(UnlinkDeviceResponseData.serializer()),
     ) {
     companion object {
         fun parse(message: String): UnlinkDeviceResponse =
-            parse<UnlinkDeviceResponseData, UnlinkDeviceResponse>(message) { response, responseKeyHash, nonce ->
-                UnlinkDeviceResponse(response, responseKeyHash, nonce)
+            parse<UnlinkDeviceResponseData, UnlinkDeviceResponse>(message) { response, serverIdentity, nonce ->
+                UnlinkDeviceResponse(response, serverIdentity, nonce)
             } as UnlinkDeviceResponse
     }
 }

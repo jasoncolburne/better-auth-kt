@@ -33,13 +33,13 @@ class CreationResponseData
 
 class CreationResponse(
     response: CreationResponseData,
-    responseKeyHash: String,
+    serverIdentity: String,
     nonce: String,
-) : ServerResponse<CreationResponseData>(response, responseKeyHash, nonce, ServerPayload.serializer(CreationResponseData.serializer())) {
+) : ServerResponse<CreationResponseData>(response, serverIdentity, nonce, ServerPayload.serializer(CreationResponseData.serializer())) {
     companion object {
         fun parse(message: String): CreationResponse =
-            parse<CreationResponseData, CreationResponse>(message) { response, responseKeyHash, nonce ->
-                CreationResponse(response, responseKeyHash, nonce)
+            parse<CreationResponseData, CreationResponse>(message) { response, serverIdentity, nonce ->
+                CreationResponse(response, serverIdentity, nonce)
             } as CreationResponse
     }
 }

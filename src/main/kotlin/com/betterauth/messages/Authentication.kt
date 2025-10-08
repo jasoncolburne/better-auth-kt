@@ -58,18 +58,18 @@ data class StartAuthenticationResponseData(
 
 class StartAuthenticationResponse(
     response: StartAuthenticationResponseData,
-    responseKeyHash: String,
+    serverIdentity: String,
     nonce: String,
 ) : ServerResponse<StartAuthenticationResponseData>(
         response,
-        responseKeyHash,
+        serverIdentity,
         nonce,
         ServerPayload.serializer(StartAuthenticationResponseData.serializer()),
     ) {
     companion object {
         fun parse(message: String): StartAuthenticationResponse =
-            parse<StartAuthenticationResponseData, StartAuthenticationResponse>(message) { response, responseKeyHash, nonce ->
-                StartAuthenticationResponse(response, responseKeyHash, nonce)
+            parse<StartAuthenticationResponseData, StartAuthenticationResponse>(message) { response, serverIdentity, nonce ->
+                StartAuthenticationResponse(response, serverIdentity, nonce)
             } as StartAuthenticationResponse
     }
 }
@@ -116,18 +116,18 @@ data class FinishAuthenticationResponseData(
 
 class FinishAuthenticationResponse(
     response: FinishAuthenticationResponseData,
-    responseKeyHash: String,
+    serverIdentity: String,
     nonce: String,
 ) : ServerResponse<FinishAuthenticationResponseData>(
         response,
-        responseKeyHash,
+        serverIdentity,
         nonce,
         ServerPayload.serializer(FinishAuthenticationResponseData.serializer()),
     ) {
     companion object {
         fun parse(message: String): FinishAuthenticationResponse =
-            parse<FinishAuthenticationResponseData, FinishAuthenticationResponse>(message) { response, responseKeyHash, nonce ->
-                FinishAuthenticationResponse(response, responseKeyHash, nonce)
+            parse<FinishAuthenticationResponseData, FinishAuthenticationResponse>(message) { response, serverIdentity, nonce ->
+                FinishAuthenticationResponse(response, serverIdentity, nonce)
             } as FinishAuthenticationResponse
     }
 }
