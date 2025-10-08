@@ -343,7 +343,7 @@ class BetterAuthClient(
 
         finishRequest.sign(store.key.authentication.signer())
         val finishMessage = finishRequest.serialize()
-        val finishReply = io.network.sendRequest(paths.session.connect, finishMessage)
+        val finishReply = io.network.sendRequest(paths.session.create, finishMessage)
 
         val finishResponse = FinishAuthenticationResponse.parse(finishReply)
 

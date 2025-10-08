@@ -61,7 +61,7 @@ val authenticationPaths =
         session =
             SessionPaths(
                 request = "/session/request",
-                connect = "/session/connect",
+                create = "/session/create",
                 refresh = "/session/refresh",
             ),
         device =

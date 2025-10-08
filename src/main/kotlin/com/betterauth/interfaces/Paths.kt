@@ -13,7 +13,7 @@ data class AccountPaths(
 
 data class SessionPaths(
     val request: String,
-    val connect: String,
+    val create: String,
     val refresh: String,
 )
 
