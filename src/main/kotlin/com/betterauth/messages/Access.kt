@@ -1,12 +1,7 @@
 package com.betterauth.messages
 
-import com.betterauth.interfaces.ServerTimeLockStore
-import com.betterauth.interfaces.Timestamper
-import com.betterauth.interfaces.TokenEncoder
-import com.betterauth.interfaces.Verifier
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.util.Date
 
 @Serializable
 data class AccessRequestPayload<T>(
