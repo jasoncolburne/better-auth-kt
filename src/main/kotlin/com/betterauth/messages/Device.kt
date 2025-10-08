@@ -143,3 +143,53 @@ class UnlinkDeviceResponse(
             } as UnlinkDeviceResponse
     }
 }
+
+@Serializable
+data class RotateDeviceRequestData(
+    val authentication: AuthenticationData,
+) {
+    @Serializable
+    data class AuthenticationData(
+        val device: String,
+        val identity: String,
+        val publicKey: String,
+        val rotationHash: String,
+    )
+}
+
+class RotateDeviceRequest(
+    request: RotateDeviceRequestData,
+    nonce: String,
+) : ClientRequest<RotateDeviceRequestData>(
+        request,
+        nonce,
+        ClientPayload.serializer(RotateDeviceRequestData.serializer()),
+    ) {
+    companion object {
+        fun parse(message: String): RotateDeviceRequest =
+            parse<RotateDeviceRequestData, RotateDeviceRequest>(message) { request, nonce ->
+                RotateDeviceRequest(request, nonce)
+            } as RotateDeviceRequest
+    }
+}
+
+@Serializable
+class RotateDeviceResponseData
+
+class RotateDeviceResponse(
+    response: RotateDeviceResponseData,
+    serverIdentity: String,
+    nonce: String,
+) : ServerResponse<RotateDeviceResponseData>(
+        response,
+        serverIdentity,
+        nonce,
+        ServerPayload.serializer(RotateDeviceResponseData.serializer()),
+    ) {
+    companion object {
+        fun parse(message: String): RotateDeviceResponse =
+            parse<RotateDeviceResponseData, RotateDeviceResponse>(message) { response, serverIdentity, nonce ->
+                RotateDeviceResponse(response, serverIdentity, nonce)
+            } as RotateDeviceResponse
+    }
+}

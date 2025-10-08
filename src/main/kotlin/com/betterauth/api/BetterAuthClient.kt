@@ -10,12 +10,12 @@ import com.betterauth.interfaces.SigningKey
 import com.betterauth.interfaces.Timestamper
 import com.betterauth.interfaces.VerificationKeyStore
 import com.betterauth.messages.AccessRequest
-import com.betterauth.messages.CreationRequest
-import com.betterauth.messages.CreationRequestData
-import com.betterauth.messages.CreationResponse
-import com.betterauth.messages.FinishAuthenticationRequest
-import com.betterauth.messages.FinishAuthenticationRequestData
-import com.betterauth.messages.FinishAuthenticationResponse
+import com.betterauth.messages.CreateAccountRequest
+import com.betterauth.messages.CreateAccountRequestData
+import com.betterauth.messages.CreateAccountResponse
+import com.betterauth.messages.CreateSessionRequest
+import com.betterauth.messages.CreateSessionRequestData
+import com.betterauth.messages.CreateSessionResponse
 import com.betterauth.messages.LinkContainer
 import com.betterauth.messages.LinkContainerPayload
 import com.betterauth.messages.LinkDeviceRequest
@@ -24,17 +24,17 @@ import com.betterauth.messages.LinkDeviceResponse
 import com.betterauth.messages.RecoverAccountRequest
 import com.betterauth.messages.RecoverAccountRequestData
 import com.betterauth.messages.RecoverAccountResponse
-import com.betterauth.messages.RefreshAccessTokenRequest
-import com.betterauth.messages.RefreshAccessTokenRequestData
-import com.betterauth.messages.RefreshAccessTokenResponse
-import com.betterauth.messages.RotateAuthenticationKeyRequest
-import com.betterauth.messages.RotateAuthenticationKeyRequestData
-import com.betterauth.messages.RotateAuthenticationKeyResponse
+import com.betterauth.messages.RefreshSessionRequest
+import com.betterauth.messages.RefreshSessionRequestData
+import com.betterauth.messages.RefreshSessionResponse
+import com.betterauth.messages.RequestSessionRequest
+import com.betterauth.messages.RequestSessionRequestPayload
+import com.betterauth.messages.RequestSessionResponse
+import com.betterauth.messages.RotateDeviceRequest
+import com.betterauth.messages.RotateDeviceRequestData
+import com.betterauth.messages.RotateDeviceResponse
 import com.betterauth.messages.ScannableResponse
 import com.betterauth.messages.SignableMessage
-import com.betterauth.messages.StartAuthenticationRequest
-import com.betterauth.messages.StartAuthenticationRequestPayload
-import com.betterauth.messages.StartAuthenticationResponse
 
 class BetterAuthClient(
     private val crypto: CryptoConfig,
@@ -104,9 +104,9 @@ class BetterAuthClient(
         val nonce = crypto.noncer.generate128()
 
         val request =
-            CreationRequest(
-                CreationRequestData(
-                    CreationRequestData.AuthenticationData(
+            CreateAccountRequest(
+                CreateAccountRequestData(
+                    CreateAccountRequestData.AuthenticationData(
                         device = device,
                         identity = identity,
                         publicKey = publicKey,
@@ -121,12 +121,56 @@ class BetterAuthClient(
         val message = request.serialize()
         val reply = io.network.sendRequest(paths.account.create, message)
 
-        val response = CreationResponse.parse(reply)
+        val response = CreateAccountResponse.parse(reply)
 
         @Suppress("UNCHECKED_CAST")
         val responsePayload =
             response.payload as
-                com.betterauth.messages.ServerPayload<com.betterauth.messages.CreationResponseData>
+                com.betterauth.messages.ServerPayload<com.betterauth.messages.CreateAccountResponseData>
+        verifyResponse(response, responsePayload.access.serverIdentity)
+
+        if (responsePayload.access.nonce != nonce) {
+            throw IllegalStateException("incorrect nonce")
+        }
+
+        store.identifier.identity.store(identity)
+        store.identifier.device.store(device)
+    }
+
+    suspend fun recoverAccount(
+        identity: String,
+        recoveryKey: SigningKey,
+        recoveryHash: String,
+    ) {
+        val (_, current, rotationHash) = store.key.authentication.initialize()
+        val device = crypto.hasher.sum(current)
+        val nonce = crypto.noncer.generate128()
+
+        val request =
+            RecoverAccountRequest(
+                RecoverAccountRequestData(
+                    RecoverAccountRequestData.AuthenticationData(
+                        device = device,
+                        identity = identity,
+                        publicKey = current,
+                        recoveryHash = recoveryHash,
+                        recoveryKey = recoveryKey.public(),
+                        rotationHash = rotationHash,
+                    ),
+                ),
+                nonce,
+            )
+
+        request.sign(recoveryKey)
+        val message = request.serialize()
+        val reply = io.network.sendRequest(paths.account.recover, message)
+
+        val response = RecoverAccountResponse.parse(reply)
+
+        @Suppress("UNCHECKED_CAST")
+        val responsePayload =
+            response.payload as
+                com.betterauth.messages.ServerPayload<com.betterauth.messages.RecoverAccountResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
         if (responsePayload.access.nonce != nonce) {
@@ -189,7 +233,7 @@ class BetterAuthClient(
 
         request.sign(store.key.authentication.signer())
         val message = request.serialize()
-        val reply = io.network.sendRequest(paths.rotate.link, message)
+        val reply = io.network.sendRequest(paths.device.link, message)
 
         val response = LinkDeviceResponse.parse(reply)
 
@@ -238,7 +282,7 @@ class BetterAuthClient(
 
         request.sign(store.key.authentication.signer())
         val message = request.serialize()
-        val reply = io.network.sendRequest(paths.rotate.unlink, message)
+        val reply = io.network.sendRequest(paths.device.unlink, message)
 
         val response =
             com.betterauth.messages.UnlinkDeviceResponse
@@ -255,14 +299,14 @@ class BetterAuthClient(
         }
     }
 
-    suspend fun rotateAuthenticationKey() {
+    suspend fun rotateDevice() {
         val (publicKey, rotationHash) = store.key.authentication.rotate()
         val nonce = crypto.noncer.generate128()
 
         val request =
-            RotateAuthenticationKeyRequest(
-                RotateAuthenticationKeyRequestData(
-                    RotateAuthenticationKeyRequestData.AuthenticationData(
+            RotateDeviceRequest(
+                RotateDeviceRequestData(
+                    RotateDeviceRequestData.AuthenticationData(
                         device = store.identifier.device.get(),
                         identity = store.identifier.identity.get(),
                         publicKey = publicKey,
@@ -274,14 +318,14 @@ class BetterAuthClient(
 
         request.sign(store.key.authentication.signer())
         val message = request.serialize()
-        val reply = io.network.sendRequest(paths.rotate.authentication, message)
+        val reply = io.network.sendRequest(paths.device.rotate, message)
 
-        val response = RotateAuthenticationKeyResponse.parse(reply)
+        val response = RotateDeviceResponse.parse(reply)
 
         @Suppress("UNCHECKED_CAST")
         val responsePayload =
             response.payload as
-                com.betterauth.messages.ServerPayload<com.betterauth.messages.RotateAuthenticationKeyResponseData>
+                com.betterauth.messages.ServerPayload<com.betterauth.messages.RotateDeviceResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
         if (responsePayload.access.nonce != nonce) {
@@ -289,17 +333,17 @@ class BetterAuthClient(
         }
     }
 
-    suspend fun authenticate() {
+    suspend fun createSession() {
         val startNonce = crypto.noncer.generate128()
 
         val startRequest =
-            StartAuthenticationRequest(
-                StartAuthenticationRequestPayload(
-                    access = StartAuthenticationRequestPayload.AccessData(startNonce),
+            RequestSessionRequest(
+                RequestSessionRequestPayload(
+                    access = RequestSessionRequestPayload.AccessData(startNonce),
                     request =
-                        StartAuthenticationRequestPayload.RequestData(
+                        RequestSessionRequestPayload.RequestData(
                             authentication =
-                                StartAuthenticationRequestPayload.AuthenticationData(
+                                RequestSessionRequestPayload.AuthenticationData(
                                     identity = store.identifier.identity.get(),
                                 ),
                         ),
@@ -307,14 +351,14 @@ class BetterAuthClient(
             )
 
         val startMessage = startRequest.serialize()
-        val startReply = io.network.sendRequest(paths.authenticate.start, startMessage)
+        val startReply = io.network.sendRequest(paths.session.request, startMessage)
 
-        val startResponse = StartAuthenticationResponse.parse(startReply)
+        val startResponse = RequestSessionResponse.parse(startReply)
 
         @Suppress("UNCHECKED_CAST")
         val startResponsePayload =
             startResponse.payload as
-                com.betterauth.messages.ServerPayload<com.betterauth.messages.StartAuthenticationResponseData>
+                com.betterauth.messages.ServerPayload<com.betterauth.messages.RequestSessionResponseData>
         verifyResponse(startResponse, startResponsePayload.access.serverIdentity)
 
         if (startResponsePayload.access.nonce != startNonce) {
@@ -325,15 +369,15 @@ class BetterAuthClient(
         val finishNonce = crypto.noncer.generate128()
 
         val finishRequest =
-            FinishAuthenticationRequest(
-                FinishAuthenticationRequestData(
+            CreateSessionRequest(
+                CreateSessionRequestData(
                     access =
-                        FinishAuthenticationRequestData.AccessData(
+                        CreateSessionRequestData.AccessData(
                             publicKey = currentKey,
                             rotationHash = nextKeyHash,
                         ),
                     authentication =
-                        FinishAuthenticationRequestData.AuthenticationData(
+                        CreateSessionRequestData.AuthenticationData(
                             device = store.identifier.device.get(),
                             nonce = startResponsePayload.response.authentication.nonce,
                         ),
@@ -343,14 +387,14 @@ class BetterAuthClient(
 
         finishRequest.sign(store.key.authentication.signer())
         val finishMessage = finishRequest.serialize()
-        val finishReply = io.network.sendRequest(paths.authenticate.finish, finishMessage)
+        val finishReply = io.network.sendRequest(paths.session.create, finishMessage)
 
-        val finishResponse = FinishAuthenticationResponse.parse(finishReply)
+        val finishResponse = CreateSessionResponse.parse(finishReply)
 
         @Suppress("UNCHECKED_CAST")
         val finishResponsePayload =
             finishResponse.payload as
-                com.betterauth.messages.ServerPayload<com.betterauth.messages.FinishAuthenticationResponseData>
+                com.betterauth.messages.ServerPayload<com.betterauth.messages.CreateSessionResponseData>
         verifyResponse(finishResponse, finishResponsePayload.access.serverIdentity)
 
         if (finishResponsePayload.access.nonce != finishNonce) {
@@ -360,14 +404,14 @@ class BetterAuthClient(
         store.token.access.store(finishResponsePayload.response.access.token)
     }
 
-    suspend fun refreshAccessToken() {
+    suspend fun refreshSession() {
         val (publicKey, rotationHash) = store.key.access.rotate()
         val nonce = crypto.noncer.generate128()
 
         val request =
-            RefreshAccessTokenRequest(
-                RefreshAccessTokenRequestData(
-                    RefreshAccessTokenRequestData.AccessData(
+            RefreshSessionRequest(
+                RefreshSessionRequestData(
+                    RefreshSessionRequestData.AccessData(
                         publicKey = publicKey,
                         rotationHash = rotationHash,
                         token = store.token.access.get(),
@@ -378,14 +422,14 @@ class BetterAuthClient(
 
         request.sign(store.key.access.signer())
         val message = request.serialize()
-        val reply = io.network.sendRequest(paths.rotate.access, message)
+        val reply = io.network.sendRequest(paths.session.refresh, message)
 
-        val response = RefreshAccessTokenResponse.parse(reply)
+        val response = RefreshSessionResponse.parse(reply)
 
         @Suppress("UNCHECKED_CAST")
         val responsePayload =
             response.payload as
-                com.betterauth.messages.ServerPayload<com.betterauth.messages.RefreshAccessTokenResponseData>
+                com.betterauth.messages.ServerPayload<com.betterauth.messages.RefreshSessionResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
         if (responsePayload.access.nonce != nonce) {
@@ -393,50 +437,6 @@ class BetterAuthClient(
         }
 
         store.token.access.store(responsePayload.response.access.token)
-    }
-
-    suspend fun recoverAccount(
-        identity: String,
-        recoveryKey: SigningKey,
-        recoveryHash: String,
-    ) {
-        val (_, current, rotationHash) = store.key.authentication.initialize()
-        val device = crypto.hasher.sum(current)
-        val nonce = crypto.noncer.generate128()
-
-        val request =
-            RecoverAccountRequest(
-                RecoverAccountRequestData(
-                    RecoverAccountRequestData.AuthenticationData(
-                        device = device,
-                        identity = identity,
-                        publicKey = current,
-                        recoveryHash = recoveryHash,
-                        recoveryKey = recoveryKey.public(),
-                        rotationHash = rotationHash,
-                    ),
-                ),
-                nonce,
-            )
-
-        request.sign(recoveryKey)
-        val message = request.serialize()
-        val reply = io.network.sendRequest(paths.rotate.recover, message)
-
-        val response = RecoverAccountResponse.parse(reply)
-
-        @Suppress("UNCHECKED_CAST")
-        val responsePayload =
-            response.payload as
-                com.betterauth.messages.ServerPayload<com.betterauth.messages.RecoverAccountResponseData>
-        verifyResponse(response, responsePayload.access.serverIdentity)
-
-        if (responsePayload.access.nonce != nonce) {
-            throw IllegalStateException("incorrect nonce")
-        }
-
-        store.identifier.identity.store(identity)
-        store.identifier.device.store(device)
     }
 
     suspend fun <T> makeAccessRequest(

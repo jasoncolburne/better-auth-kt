@@ -3,6 +3,53 @@ package com.betterauth.messages
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class CreateAccountRequestData(
+    val authentication: AuthenticationData,
+) {
+    @Serializable
+    data class AuthenticationData(
+        val device: String,
+        val identity: String,
+        val publicKey: String,
+        val recoveryHash: String,
+        val rotationHash: String,
+    )
+}
+
+class CreateAccountRequest(
+    request: CreateAccountRequestData,
+    nonce: String,
+) : ClientRequest<CreateAccountRequestData>(request, nonce, ClientPayload.serializer(CreateAccountRequestData.serializer())) {
+    companion object {
+        fun parse(message: String): CreateAccountRequest =
+            parse<CreateAccountRequestData, CreateAccountRequest>(message) { request, nonce ->
+                CreateAccountRequest(request, nonce)
+            } as CreateAccountRequest
+    }
+}
+
+@Serializable
+class CreateAccountResponseData
+
+class CreateAccountResponse(
+    response: CreateAccountResponseData,
+    serverIdentity: String,
+    nonce: String,
+) : ServerResponse<CreateAccountResponseData>(
+        response,
+        serverIdentity,
+        nonce,
+        ServerPayload.serializer(CreateAccountResponseData.serializer()),
+    ) {
+    companion object {
+        fun parse(message: String): CreateAccountResponse =
+            parse<CreateAccountResponseData, CreateAccountResponse>(message) { response, serverIdentity, nonce ->
+                CreateAccountResponse(response, serverIdentity, nonce)
+            } as CreateAccountResponse
+    }
+}
+
+@Serializable
 data class RecoverAccountRequestData(
     val authentication: AuthenticationData,
 ) {
