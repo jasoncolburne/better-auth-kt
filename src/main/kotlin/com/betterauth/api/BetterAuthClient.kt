@@ -27,14 +27,14 @@ import com.betterauth.messages.RecoverAccountResponse
 import com.betterauth.messages.RefreshSessionRequest
 import com.betterauth.messages.RefreshSessionRequestData
 import com.betterauth.messages.RefreshSessionResponse
+import com.betterauth.messages.RequestSessionRequest
+import com.betterauth.messages.RequestSessionRequestPayload
+import com.betterauth.messages.RequestSessionResponse
 import com.betterauth.messages.RotateDeviceRequest
 import com.betterauth.messages.RotateDeviceRequestData
 import com.betterauth.messages.RotateDeviceResponse
 import com.betterauth.messages.ScannableResponse
 import com.betterauth.messages.SignableMessage
-import com.betterauth.messages.RequestSessionRequest
-import com.betterauth.messages.RequestSessionRequestPayload
-import com.betterauth.messages.RequestSessionResponse
 
 class BetterAuthClient(
     private val crypto: CryptoConfig,

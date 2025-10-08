@@ -35,7 +35,12 @@ class CreateAccountResponse(
     response: CreateAccountResponseData,
     serverIdentity: String,
     nonce: String,
-) : ServerResponse<CreateAccountResponseData>(response, serverIdentity, nonce, ServerPayload.serializer(CreateAccountResponseData.serializer())) {
+) : ServerResponse<CreateAccountResponseData>(
+        response,
+        serverIdentity,
+        nonce,
+        ServerPayload.serializer(CreateAccountResponseData.serializer()),
+    ) {
     companion object {
         fun parse(message: String): CreateAccountResponse =
             parse<CreateAccountResponseData, CreateAccountResponse>(message) { response, serverIdentity, nonce ->
