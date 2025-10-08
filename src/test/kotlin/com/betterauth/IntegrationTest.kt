@@ -133,9 +133,9 @@ suspend fun executeFlow(
     eccVerifier: Verifier,
     responseVerificationKey: VerificationKey,
 ) {
-    betterAuthClient.rotateAuthenticationKey()
-    betterAuthClient.authenticate()
-    betterAuthClient.refreshAccessToken()
+    betterAuthClient.rotateDevice()
+    betterAuthClient.createSession()
+    betterAuthClient.refreshSession()
 
     testAccess(betterAuthClient, eccVerifier, responseVerificationKey)
 }
@@ -499,7 +499,7 @@ class IntegrationTest {
             betterAuthClient.createAccount(recoveryHash)
 
             try {
-                betterAuthClient.authenticate()
+                betterAuthClient.createSession()
                 val message =
                     FakeRequest(
                         foo = "bar",
