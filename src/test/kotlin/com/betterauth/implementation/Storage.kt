@@ -6,8 +6,9 @@ import com.betterauth.interfaces.Hasher
 import com.betterauth.interfaces.SigningKey
 
 class ClientRotatingKeyStoreImpl : ClientRotatingKeyStore {
-    private var current: SigningKey? = null
-    private var next: SigningKey? = null
+    private var currentKey: SigningKey? = null
+    private var nextKey: SigningKey? = null
+    private var futureKey: SigningKey? = null
     private val hasher: Hasher = HasherImpl()
 
     override suspend fun initialize(extraData: String?): Triple<String, String, String> {
@@ -17,8 +18,8 @@ class ClientRotatingKeyStoreImpl : ClientRotatingKeyStore {
         current.generate()
         next.generate()
 
-        this.current = current
-        this.next = next
+        this.currentKey = current
+        this.nextKey = next
 
         val suffix = extraData ?: ""
 
@@ -29,28 +30,42 @@ class ClientRotatingKeyStoreImpl : ClientRotatingKeyStore {
         return Triple(identity, publicKey, rotationHash)
     }
 
-    override suspend fun rotate(): Pair<String, String> {
-        if (next == null) {
+    override suspend fun next(): Pair<SigningKey, String> {
+        if (nextKey == null) {
             throw IllegalStateException("call initialize() first")
         }
 
-        val next = Secp256r1()
-        next.generate()
+        if (futureKey == null) {
+            val key = Secp256r1()
+            key.generate()
+            futureKey = key
+        }
 
-        current = this.next
-        this.next = next
+        val rotationHash = hasher.sum(futureKey!!.public())
 
-        val rotationHash = hasher.sum(next.public())
+        return Pair(nextKey!!, rotationHash)
+    }
 
-        return Pair(current!!.public(), rotationHash)
+    override suspend fun rotate() {
+        if (nextKey == null) {
+            throw IllegalStateException("call initialize() first")
+        }
+
+        if (futureKey == null) {
+            throw IllegalStateException("call next() first")
+        }
+
+        currentKey = nextKey
+        nextKey = futureKey
+        futureKey = null
     }
 
     override suspend fun signer(): SigningKey {
-        if (current == null) {
+        if (currentKey == null) {
             throw IllegalStateException("call initialize() first")
         }
 
-        return current!!
+        return currentKey!!
     }
 }
 

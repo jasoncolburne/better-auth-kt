@@ -14,11 +14,19 @@ interface ClientRotatingKeyStore {
     // returns: Triple(identity, publicKey, rotationHash)
     suspend fun initialize(extraData: String? = null): Triple<String, String, String>
 
-    // throw an exception if:
-    // - no keys exist
+    // returns: Pair(key, rotationHash)
     //
-    // returns: Pair(publicKey, rotationHash)
-    suspend fun rotate(): Pair<String, String>
+    // this should return the _next_ signing key and a hash of the subsequent key
+    // if no subsequent key exists yet, it should first be generated
+    //
+    // this facilitates a failed network request during a rotation operation
+    suspend fun next(): Pair<SigningKey, String>
+
+    // throw an exception if:
+    // - next() has not been called since the last call to initialize() or rotate()
+    //
+    // this is the commit operation of next()
+    suspend fun rotate()
 
     // returns: effectively, a handle to a signing key
     suspend fun signer(): SigningKey
