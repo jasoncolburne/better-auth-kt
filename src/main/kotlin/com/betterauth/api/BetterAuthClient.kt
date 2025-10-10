@@ -369,7 +369,7 @@ class BetterAuthClient(
             throw IllegalStateException("incorrect nonce")
         }
 
-        val (_, currentKey, nextKeyHash) = store.key.access.initialize()
+        val (_, publicKey, rotationHash) = store.key.access.initialize()
         val finishNonce = crypto.noncer.generate128()
 
         val finishRequest =
@@ -377,8 +377,8 @@ class BetterAuthClient(
                 CreateSessionRequestData(
                     access =
                         CreateSessionRequestData.AccessData(
-                            publicKey = currentKey,
-                            rotationHash = nextKeyHash,
+                            publicKey = publicKey,
+                            rotationHash = rotationHash,
                         ),
                     authentication =
                         CreateSessionRequestData.AuthenticationData(
