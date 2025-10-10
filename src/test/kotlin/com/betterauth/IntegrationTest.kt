@@ -221,6 +221,7 @@ class IntegrationTest {
             val recoveryHash = hasher.sum(recoverySigner.public())
             betterAuthClient.createAccount(recoveryHash)
             executeFlow(betterAuthClient, eccVerifier, responseVerificationKey)
+            betterAuthClient.deleteAccount()
         }
 
     @Test
