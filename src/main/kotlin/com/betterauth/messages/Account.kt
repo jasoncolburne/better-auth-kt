@@ -96,3 +96,49 @@ class RecoverAccountResponse(
             } as RecoverAccountResponse
     }
 }
+
+@Serializable
+data class DeleteAccountRequestData(
+    val authentication: AuthenticationData,
+) {
+    @Serializable
+    data class AuthenticationData(
+        val device: String,
+        val identity: String,
+        val publicKey: String,
+        val rotationHash: String,
+    )
+}
+
+class DeleteAccountRequest(
+    request: DeleteAccountRequestData,
+    nonce: String,
+) : ClientRequest<DeleteAccountRequestData>(request, nonce, ClientPayload.serializer(DeleteAccountRequestData.serializer())) {
+    companion object {
+        fun parse(message: String): DeleteAccountRequest =
+            parse<DeleteAccountRequestData, DeleteAccountRequest>(message) { request, nonce ->
+                DeleteAccountRequest(request, nonce)
+            } as DeleteAccountRequest
+    }
+}
+
+@Serializable
+class DeleteAccountResponseData
+
+class DeleteAccountResponse(
+    response: DeleteAccountResponseData,
+    serverIdentity: String,
+    nonce: String,
+) : ServerResponse<DeleteAccountResponseData>(
+        response,
+        serverIdentity,
+        nonce,
+        ServerPayload.serializer(DeleteAccountResponseData.serializer()),
+    ) {
+    companion object {
+        fun parse(message: String): DeleteAccountResponse =
+            parse<DeleteAccountResponseData, DeleteAccountResponse>(message) { response, serverIdentity, nonce ->
+                DeleteAccountResponse(response, serverIdentity, nonce)
+            } as DeleteAccountResponse
+    }
+}

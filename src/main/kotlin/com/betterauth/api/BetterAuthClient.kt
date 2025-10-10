@@ -16,6 +16,9 @@ import com.betterauth.messages.CreateAccountResponse
 import com.betterauth.messages.CreateSessionRequest
 import com.betterauth.messages.CreateSessionRequestData
 import com.betterauth.messages.CreateSessionResponse
+import com.betterauth.messages.DeleteAccountRequest
+import com.betterauth.messages.DeleteAccountRequestData
+import com.betterauth.messages.DeleteAccountResponse
 import com.betterauth.messages.LinkContainer
 import com.betterauth.messages.LinkContainerPayload
 import com.betterauth.messages.LinkDeviceRequest
@@ -292,6 +295,42 @@ class BetterAuthClient(
         val responsePayload =
             response.payload as
                 com.betterauth.messages.ServerPayload<com.betterauth.messages.UnlinkDeviceResponseData>
+        verifyResponse(response, responsePayload.access.serverIdentity)
+
+        if (responsePayload.access.nonce != nonce) {
+            throw IllegalStateException("incorrect nonce")
+        }
+
+        store.key.authentication.rotate()
+    }
+
+    suspend fun deleteAccount() {
+        val nonce = crypto.noncer.generate128()
+        val (signingKey, rotationHash) = store.key.authentication.next()
+
+        val request =
+            DeleteAccountRequest(
+                DeleteAccountRequestData(
+                    DeleteAccountRequestData.AuthenticationData(
+                        device = store.identifier.device.get(),
+                        identity = store.identifier.identity.get(),
+                        publicKey = signingKey.public(),
+                        rotationHash = rotationHash,
+                    ),
+                ),
+                nonce,
+            )
+
+        request.sign(signingKey)
+        val message = request.serialize()
+        val reply = io.network.sendRequest(paths.account.delete, message)
+
+        val response = DeleteAccountResponse.parse(reply)
+
+        @Suppress("UNCHECKED_CAST")
+        val responsePayload =
+            response.payload as
+                com.betterauth.messages.ServerPayload<com.betterauth.messages.DeleteAccountResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
         if (responsePayload.access.nonce != nonce) {
