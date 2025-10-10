@@ -99,7 +99,7 @@ class BetterAuthClient(
     suspend fun createAccount(recoveryHash: String) {
         val (identity, publicKey, rotationHash) =
             store.key.authentication.initialize(recoveryHash)
-        val device = crypto.hasher.sum(publicKey)
+        val device = crypto.hasher.sum(publicKey + rotationHash)
 
         val nonce = crypto.noncer.generate128()
 
@@ -143,7 +143,7 @@ class BetterAuthClient(
         recoveryHash: String,
     ) {
         val (_, current, rotationHash) = store.key.authentication.initialize()
-        val device = crypto.hasher.sum(current)
+        val device = crypto.hasher.sum(current + rotationHash)
         val nonce = crypto.noncer.generate128()
 
         val request =
@@ -185,7 +185,7 @@ class BetterAuthClient(
     // send identity by qr code or network from the existing device
     suspend fun generateLinkContainer(identity: String): String {
         val (_, publicKey, rotationHash) = store.key.authentication.initialize()
-        val device = crypto.hasher.sum(publicKey)
+        val device = crypto.hasher.sum(publicKey + rotationHash)
 
         store.identifier.identity.store(identity)
         store.identifier.device.store(device)
