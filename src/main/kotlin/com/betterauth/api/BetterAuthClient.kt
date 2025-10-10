@@ -212,9 +212,8 @@ class BetterAuthClient(
     // like 244x244px (61*4x61*4)
     suspend fun linkDevice(linkContainer: String) {
         val container = LinkContainer.parse(linkContainer)
-
-        val (publicKey, rotationHash) = store.key.authentication.rotate()
         val nonce = crypto.noncer.generate128()
+        val (signingKey, rotationHash) = store.key.authentication.next()
 
         val request =
             LinkDeviceRequest(
@@ -223,7 +222,7 @@ class BetterAuthClient(
                         LinkDeviceRequestData.AuthenticationData(
                             device = store.identifier.device.get(),
                             identity = store.identifier.identity.get(),
-                            publicKey = publicKey,
+                            publicKey = signingKey.public(),
                             rotationHash = rotationHash,
                         ),
                     link = com.betterauth.messages.LinkContainerData(container.linkContainerPayload, container.signature),
@@ -231,7 +230,7 @@ class BetterAuthClient(
                 nonce,
             )
 
-        request.sign(store.key.authentication.signer())
+        request.sign(signingKey)
         val message = request.serialize()
         val reply = io.network.sendRequest(paths.device.link, message)
 
@@ -246,12 +245,13 @@ class BetterAuthClient(
         if (responsePayload.access.nonce != nonce) {
             throw IllegalStateException("incorrect nonce")
         }
+
+        store.key.authentication.rotate()
     }
 
     suspend fun unlinkDevice(device: String) {
         val nonce = crypto.noncer.generate128()
-
-        val (publicKey, rotationHash) = store.key.authentication.rotate()
+        val (signingKey, rotationHash) = store.key.authentication.next()
 
         val currentDevice = store.identifier.device.get()
         val hash =
@@ -269,7 +269,7 @@ class BetterAuthClient(
                         com.betterauth.messages.UnlinkDeviceRequestData.AuthenticationData(
                             device = currentDevice,
                             identity = store.identifier.identity.get(),
-                            publicKey = publicKey,
+                            publicKey = signingKey.public(),
                             rotationHash = hash,
                         ),
                     link =
@@ -280,7 +280,7 @@ class BetterAuthClient(
                 nonce,
             )
 
-        request.sign(store.key.authentication.signer())
+        request.sign(signingKey)
         val message = request.serialize()
         val reply = io.network.sendRequest(paths.device.unlink, message)
 
@@ -297,10 +297,12 @@ class BetterAuthClient(
         if (responsePayload.access.nonce != nonce) {
             throw IllegalStateException("incorrect nonce")
         }
+
+        store.key.authentication.rotate()
     }
 
     suspend fun rotateDevice() {
-        val (publicKey, rotationHash) = store.key.authentication.rotate()
+        val (signingKey, rotationHash) = store.key.authentication.next()
         val nonce = crypto.noncer.generate128()
 
         val request =
@@ -309,14 +311,14 @@ class BetterAuthClient(
                     RotateDeviceRequestData.AuthenticationData(
                         device = store.identifier.device.get(),
                         identity = store.identifier.identity.get(),
-                        publicKey = publicKey,
+                        publicKey = signingKey.public(),
                         rotationHash = rotationHash,
                     ),
                 ),
                 nonce,
             )
 
-        request.sign(store.key.authentication.signer())
+        request.sign(signingKey)
         val message = request.serialize()
         val reply = io.network.sendRequest(paths.device.rotate, message)
 
@@ -331,6 +333,8 @@ class BetterAuthClient(
         if (responsePayload.access.nonce != nonce) {
             throw IllegalStateException("incorrect nonce")
         }
+
+        store.key.authentication.rotate()
     }
 
     suspend fun createSession() {
@@ -365,7 +369,7 @@ class BetterAuthClient(
             throw IllegalStateException("incorrect nonce")
         }
 
-        val (_, currentKey, nextKeyHash) = store.key.access.initialize()
+        val (_, publicKey, rotationHash) = store.key.access.initialize()
         val finishNonce = crypto.noncer.generate128()
 
         val finishRequest =
@@ -373,8 +377,8 @@ class BetterAuthClient(
                 CreateSessionRequestData(
                     access =
                         CreateSessionRequestData.AccessData(
-                            publicKey = currentKey,
-                            rotationHash = nextKeyHash,
+                            publicKey = publicKey,
+                            rotationHash = rotationHash,
                         ),
                     authentication =
                         CreateSessionRequestData.AuthenticationData(
@@ -405,14 +409,14 @@ class BetterAuthClient(
     }
 
     suspend fun refreshSession() {
-        val (publicKey, rotationHash) = store.key.access.rotate()
+        val (signingKey, rotationHash) = store.key.access.next()
         val nonce = crypto.noncer.generate128()
 
         val request =
             RefreshSessionRequest(
                 RefreshSessionRequestData(
                     RefreshSessionRequestData.AccessData(
-                        publicKey = publicKey,
+                        publicKey = signingKey.public(),
                         rotationHash = rotationHash,
                         token = store.token.access.get(),
                     ),
@@ -420,7 +424,7 @@ class BetterAuthClient(
                 nonce,
             )
 
-        request.sign(store.key.access.signer())
+        request.sign(signingKey)
         val message = request.serialize()
         val reply = io.network.sendRequest(paths.session.refresh, message)
 
@@ -437,6 +441,7 @@ class BetterAuthClient(
         }
 
         store.token.access.store(responsePayload.response.access.token)
+        store.key.access.rotate()
     }
 
     suspend fun <T> makeAccessRequest(
