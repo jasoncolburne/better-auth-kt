@@ -9,6 +9,7 @@ data class AuthenticationPaths(
 data class AccountPaths(
     val create: String,
     val recover: String,
+    val delete: String,
 )
 
 data class SessionPaths(

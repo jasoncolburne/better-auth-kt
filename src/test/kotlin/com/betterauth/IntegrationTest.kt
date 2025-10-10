@@ -57,6 +57,7 @@ val authenticationPaths =
             AccountPaths(
                 create = "/account/create",
                 recover = "/account/recover",
+                delete = "/account/delete",
             ),
         session =
             SessionPaths(
@@ -220,6 +221,7 @@ class IntegrationTest {
             val recoveryHash = hasher.sum(recoverySigner.public())
             betterAuthClient.createAccount(recoveryHash)
             executeFlow(betterAuthClient, eccVerifier, responseVerificationKey)
+            betterAuthClient.deleteAccount()
         }
 
     @Test
