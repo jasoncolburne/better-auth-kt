@@ -3,7 +3,7 @@
 JAVA_HOME ?= /opt/homebrew/opt/openjdk@21
 
 setup:
-	env JAVA_HOME=$(JAVA_HOME) ./gradlew build --refresh-dependencies
+	env JAVA_HOME=$(JAVA_HOME) ./gradlew assemble --refresh-dependencies
 
 test:
 	env JAVA_HOME=$(JAVA_HOME) ./gradlew test
