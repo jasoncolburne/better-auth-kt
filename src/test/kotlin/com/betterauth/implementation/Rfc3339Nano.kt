@@ -13,8 +13,8 @@ class Rfc3339Nano : Timestamper {
 
     override fun format(date: Date): String {
         val isoString = isoFormat.format(date)
-        // Extend milliseconds (3 digits) to nanoseconds (9 digits) by appending 6 zeros
-        return "${isoString}000000Z"
+        // Use millisecond precision (3 digits)
+        return "${isoString}Z"
     }
 
     override fun parse(dateString: String): Date = Date.parse(dateString).let { Date(it) }
