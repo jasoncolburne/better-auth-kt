@@ -10,6 +10,10 @@ import com.betterauth.interfaces.SigningKey
 import com.betterauth.interfaces.Timestamper
 import com.betterauth.interfaces.VerificationKeyStore
 import com.betterauth.messages.AccessRequest
+import com.betterauth.messages.ChangeRecoveryKeyRequest
+import com.betterauth.messages.ChangeRecoveryKeyRequestData
+import com.betterauth.messages.ChangeRecoveryKeyResponse
+import com.betterauth.messages.ChangeRecoveryKeyResponseData
 import com.betterauth.messages.CreateAccountRequest
 import com.betterauth.messages.CreateAccountRequestData
 import com.betterauth.messages.CreateAccountResponse
@@ -367,6 +371,43 @@ class BetterAuthClient(
         val responsePayload =
             response.payload as
                 com.betterauth.messages.ServerPayload<com.betterauth.messages.RotateDeviceResponseData>
+        verifyResponse(response, responsePayload.access.serverIdentity)
+
+        if (responsePayload.access.nonce != nonce) {
+            throw IllegalStateException("incorrect nonce")
+        }
+
+        store.key.authentication.rotate()
+    }
+
+    suspend fun changeRecoveryKey(recoveryHash: String) {
+        val (signingKey, rotationHash) = store.key.authentication.next()
+        val nonce = crypto.noncer.generate128()
+
+        val request =
+            ChangeRecoveryKeyRequest(
+                ChangeRecoveryKeyRequestData(
+                    ChangeRecoveryKeyRequestData.AuthenticationData(
+                        device = store.identifier.device.get(),
+                        identity = store.identifier.identity.get(),
+                        publicKey = signingKey.public(),
+                        recoveryHash = recoveryHash,
+                        rotationHash = rotationHash,
+                    ),
+                ),
+                nonce,
+            )
+
+        request.sign(signingKey)
+        val message = request.serialize()
+        val reply = io.network.sendRequest(paths.recovery.change, message)
+
+        val response = ChangeRecoveryKeyResponse.parse(reply)
+
+        @Suppress("UNCHECKED_CAST")
+        val responsePayload =
+            response.payload as
+                com.betterauth.messages.ServerPayload<com.betterauth.messages.ChangeRecoveryKeyResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
         if (responsePayload.access.nonce != nonce) {

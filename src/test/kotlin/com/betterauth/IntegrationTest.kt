@@ -12,6 +12,7 @@ import com.betterauth.interfaces.AccountPaths
 import com.betterauth.interfaces.AuthenticationPaths
 import com.betterauth.interfaces.DevicePaths
 import com.betterauth.interfaces.Network
+import com.betterauth.interfaces.RecoveryPaths
 import com.betterauth.interfaces.SessionPaths
 import com.betterauth.interfaces.VerificationKey
 import com.betterauth.interfaces.VerificationKeyStore
@@ -70,6 +71,10 @@ val authenticationPaths =
                 rotate = "/device/rotate",
                 link = "/device/link",
                 unlink = "/device/unlink",
+            ),
+        recovery =
+            RecoveryPaths(
+                change = "/recovery/change",
             ),
     )
 
@@ -321,12 +326,16 @@ class IntegrationTest {
             val recoveryHash = hasher.sum(recoverySigner.public())
             betterAuthClient.createAccount(recoveryHash)
 
+            val identity = betterAuthClient.identity()
+            val newRecoverySigner = Secp256r1()
             val nextRecoverySigner = Secp256r1()
+            newRecoverySigner.generate()
             nextRecoverySigner.generate()
+            val newRecoveryHash = hasher.sum(newRecoverySigner.public())
             val nextRecoveryHash = hasher.sum(nextRecoverySigner.public())
 
-            val identity = betterAuthClient.identity()
-            recoveredBetterAuthClient.recoverAccount(identity, recoverySigner, nextRecoveryHash)
+            betterAuthClient.changeRecoveryKey(newRecoveryHash)
+            recoveredBetterAuthClient.recoverAccount(identity, newRecoverySigner, nextRecoveryHash)
             executeFlow(recoveredBetterAuthClient, eccVerifier, responseVerificationKey)
         }
 
