@@ -4,6 +4,7 @@ data class AuthenticationPaths(
     val account: AccountPaths,
     val session: SessionPaths,
     val device: DevicePaths,
+    val recovery: RecoveryPaths,
 )
 
 data class AccountPaths(
@@ -22,4 +23,8 @@ data class DevicePaths(
     val rotate: String,
     val link: String,
     val unlink: String,
+)
+
+data class RecoveryPaths(
+    val change: String,
 )
