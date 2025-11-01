@@ -1,5 +1,6 @@
 package com.betterauth.api
 
+import com.betterauth.BetterAuthError
 import com.betterauth.interfaces.AuthenticationPaths
 import com.betterauth.interfaces.ClientRotatingKeyStore
 import com.betterauth.interfaces.ClientValueStore
@@ -136,8 +137,9 @@ class BetterAuthClient(
                 com.betterauth.messages.ServerPayload<com.betterauth.messages.CreateAccountResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
-        if (responsePayload.access.nonce != nonce) {
-            throw IllegalStateException("incorrect nonce")
+        val responseNonce = responsePayload.access.nonce
+        if (responseNonce != nonce) {
+            throw BetterAuthError.IncorrectNonce(expected = nonce, actual = responseNonce)
         }
 
         store.identifier.identity.store(identity)
@@ -180,8 +182,9 @@ class BetterAuthClient(
                 com.betterauth.messages.ServerPayload<com.betterauth.messages.RecoverAccountResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
-        if (responsePayload.access.nonce != nonce) {
-            throw IllegalStateException("incorrect nonce")
+        val responseNonce = responsePayload.access.nonce
+        if (responseNonce != nonce) {
+            throw BetterAuthError.IncorrectNonce(expected = nonce, actual = responseNonce)
         }
 
         store.identifier.identity.store(identity)
@@ -249,8 +252,9 @@ class BetterAuthClient(
                 com.betterauth.messages.ServerPayload<com.betterauth.messages.LinkDeviceResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
-        if (responsePayload.access.nonce != nonce) {
-            throw IllegalStateException("incorrect nonce")
+        val responseNonce = responsePayload.access.nonce
+        if (responseNonce != nonce) {
+            throw BetterAuthError.IncorrectNonce(expected = nonce, actual = responseNonce)
         }
 
         store.key.authentication.rotate()
@@ -301,8 +305,9 @@ class BetterAuthClient(
                 com.betterauth.messages.ServerPayload<com.betterauth.messages.UnlinkDeviceResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
-        if (responsePayload.access.nonce != nonce) {
-            throw IllegalStateException("incorrect nonce")
+        val responseNonce = responsePayload.access.nonce
+        if (responseNonce != nonce) {
+            throw BetterAuthError.IncorrectNonce(expected = nonce, actual = responseNonce)
         }
 
         store.key.authentication.rotate()
@@ -337,8 +342,9 @@ class BetterAuthClient(
                 com.betterauth.messages.ServerPayload<com.betterauth.messages.DeleteAccountResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
-        if (responsePayload.access.nonce != nonce) {
-            throw IllegalStateException("incorrect nonce")
+        val responseNonce = responsePayload.access.nonce
+        if (responseNonce != nonce) {
+            throw BetterAuthError.IncorrectNonce(expected = nonce, actual = responseNonce)
         }
 
         store.key.authentication.rotate()
@@ -373,8 +379,9 @@ class BetterAuthClient(
                 com.betterauth.messages.ServerPayload<com.betterauth.messages.RotateDeviceResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
-        if (responsePayload.access.nonce != nonce) {
-            throw IllegalStateException("incorrect nonce")
+        val responseNonce = responsePayload.access.nonce
+        if (responseNonce != nonce) {
+            throw BetterAuthError.IncorrectNonce(expected = nonce, actual = responseNonce)
         }
 
         store.key.authentication.rotate()
@@ -410,8 +417,9 @@ class BetterAuthClient(
                 com.betterauth.messages.ServerPayload<com.betterauth.messages.ChangeRecoveryKeyResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
-        if (responsePayload.access.nonce != nonce) {
-            throw IllegalStateException("incorrect nonce")
+        val responseNonce = responsePayload.access.nonce
+        if (responseNonce != nonce) {
+            throw BetterAuthError.IncorrectNonce(expected = nonce, actual = responseNonce)
         }
 
         store.key.authentication.rotate()
@@ -446,7 +454,7 @@ class BetterAuthClient(
         verifyResponse(startResponse, startResponsePayload.access.serverIdentity)
 
         if (startResponsePayload.access.nonce != startNonce) {
-            throw IllegalStateException("incorrect nonce")
+            throw BetterAuthError.IncorrectNonce(expected = startNonce, actual = startResponsePayload.access.nonce)
         }
 
         val (_, publicKey, rotationHash) = store.key.access.initialize()
@@ -482,7 +490,7 @@ class BetterAuthClient(
         verifyResponse(finishResponse, finishResponsePayload.access.serverIdentity)
 
         if (finishResponsePayload.access.nonce != finishNonce) {
-            throw IllegalStateException("incorrect nonce")
+            throw BetterAuthError.IncorrectNonce(expected = finishNonce, actual = finishResponsePayload.access.nonce)
         }
 
         store.token.access.store(finishResponsePayload.response.access.token)
@@ -516,8 +524,9 @@ class BetterAuthClient(
                 com.betterauth.messages.ServerPayload<com.betterauth.messages.RefreshSessionResponseData>
         verifyResponse(response, responsePayload.access.serverIdentity)
 
-        if (responsePayload.access.nonce != nonce) {
-            throw IllegalStateException("incorrect nonce")
+        val responseNonce = responsePayload.access.nonce
+        if (responseNonce != nonce) {
+            throw BetterAuthError.IncorrectNonce(expected = nonce, actual = responseNonce)
         }
 
         store.token.access.store(responsePayload.response.access.token)
@@ -553,8 +562,10 @@ class BetterAuthClient(
         val responsePayload =
             response.payload as
                 com.betterauth.messages.ServerPayload<com.betterauth.messages.ScannableResponseData>
-        if (responsePayload.access.nonce != accessRequest.accessRequestPayload.access.nonce) {
-            throw IllegalStateException("incorrect nonce")
+        val requestNonce = accessRequest.accessRequestPayload.access.nonce
+        val responseNonce = responsePayload.access.nonce
+        if (responseNonce != requestNonce) {
+            throw BetterAuthError.IncorrectNonce(expected = requestNonce, actual = responseNonce)
         }
 
         return reply

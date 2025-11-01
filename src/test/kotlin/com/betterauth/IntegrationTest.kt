@@ -519,8 +519,9 @@ class IntegrationTest {
                 betterAuthClient.makeAccessRequest("/bad/nonce", message, FakeRequest.serializer())
 
                 throw AssertionError("expected a failure")
-            } catch (e: IllegalStateException) {
-                assertEquals("incorrect nonce", e.message)
+            } catch (e: BetterAuthError.IncorrectNonce) {
+                // Expected - nonce mismatch detected
+                assertEquals("BA203", e.code)
             }
         }
 }
