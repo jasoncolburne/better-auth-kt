@@ -1,5 +1,6 @@
 package com.betterauth.messages
 
+import com.betterauth.BetterAuthError
 import com.betterauth.interfaces.SigningKey
 import com.betterauth.interfaces.Verifier
 
@@ -19,7 +20,7 @@ abstract class SignableMessage : SerializableMessage() {
 
     override suspend fun serialize(): String {
         if (signature == null) {
-            throw IllegalStateException("null signature")
+            throw BetterAuthError.InvalidMessage(field = "signature", details = "signature is null")
         }
 
         return """{"payload":${composePayload()},"signature":"$signature"}"""
@@ -34,7 +35,7 @@ abstract class SignableMessage : SerializableMessage() {
         publicKey: String,
     ) {
         if (signature == null) {
-            throw IllegalStateException("null signature")
+            throw BetterAuthError.InvalidMessage(field = "signature", details = "signature is null")
         }
 
         verifier.verify(composePayload(), signature!!, publicKey)
