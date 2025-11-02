@@ -5,7 +5,7 @@ import com.betterauth.implementation.ClientRotatingKeyStoreImpl
 import com.betterauth.implementation.ClientValueStoreImpl
 import com.betterauth.implementation.HasherImpl
 import com.betterauth.implementation.NoncerImpl
-import com.betterauth.implementation.Rfc3339Nano
+import com.betterauth.implementation.Rfc3339
 import com.betterauth.implementation.Secp256r1
 import com.betterauth.implementation.Secp256r1Verifier
 import com.betterauth.interfaces.AccountPaths
@@ -197,7 +197,7 @@ class IntegrationTest {
                         ),
                     encoding =
                         BetterAuthClient.EncodingConfig(
-                            timestamper = Rfc3339Nano(),
+                            timestamper = Rfc3339(),
                         ),
                     io =
                         BetterAuthClient.IOConfig(
@@ -258,7 +258,7 @@ class IntegrationTest {
                         ),
                     encoding =
                         BetterAuthClient.EncodingConfig(
-                            timestamper = Rfc3339Nano(),
+                            timestamper = Rfc3339(),
                         ),
                     io =
                         BetterAuthClient.IOConfig(
@@ -297,7 +297,7 @@ class IntegrationTest {
                         ),
                     encoding =
                         BetterAuthClient.EncodingConfig(
-                            timestamper = Rfc3339Nano(),
+                            timestamper = Rfc3339(),
                         ),
                     io =
                         BetterAuthClient.IOConfig(
@@ -368,7 +368,7 @@ class IntegrationTest {
                         ),
                     encoding =
                         BetterAuthClient.EncodingConfig(
-                            timestamper = Rfc3339Nano(),
+                            timestamper = Rfc3339(),
                         ),
                     io =
                         BetterAuthClient.IOConfig(
@@ -407,7 +407,7 @@ class IntegrationTest {
                         ),
                     encoding =
                         BetterAuthClient.EncodingConfig(
-                            timestamper = Rfc3339Nano(),
+                            timestamper = Rfc3339(),
                         ),
                     io =
                         BetterAuthClient.IOConfig(
@@ -480,7 +480,7 @@ class IntegrationTest {
                         ),
                     encoding =
                         BetterAuthClient.EncodingConfig(
-                            timestamper = Rfc3339Nano(),
+                            timestamper = Rfc3339(),
                         ),
                     io =
                         BetterAuthClient.IOConfig(

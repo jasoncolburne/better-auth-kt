@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
 
-class Rfc3339Nano : Timestamper {
+class Rfc3339 : Timestamper {
     private val isoFormat =
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").apply {
             timeZone = TimeZone.getTimeZone("UTC")
