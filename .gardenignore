@@ -1,0 +1,11 @@
+# Kotlin/Gradle build artifacts
+build
+.gradle
+*.jar
+*.class
+
+# Logs
+*.log
+
+# OS
+.DS_Store
